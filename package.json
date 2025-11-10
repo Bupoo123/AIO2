@@ -1,0 +1,21 @@
+{
+  "name": "jeyi-toolhub",
+  "version": "1.0.0",
+  "description": "杰毅生物研发工具集 - 统一入口平台",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "install-backend": "cd backend && npm install",
+    "install-all": "npm install && cd backend && npm install"
+  },
+  "keywords": [
+    "toolhub",
+    "jeyi",
+    "tools"
+  ],
+  "author": "杰毅生物",
+  "license": "ISC",
+  "dependencies": {}
+}
+
