@@ -296,6 +296,18 @@ async function loadAdminTools() {
     }
 }
 
+// 加载管理后台用户列表
+async function loadAdminUsers() {
+    try {
+        const users = await getUsers();
+        renderUserList(users, currentUser ? currentUser.id : null);
+    } catch (error) {
+        console.error('加载用户列表失败:', error);
+        document.getElementById('adminUsersList').innerHTML = 
+            '<tr><td colspan="5" style="text-align: center; color: red;">加载失败: ' + error.message + '</td></tr>';
+    }
+}
+
 // 显示添加工具表单
 function showAddToolForm() {
     document.getElementById('toolFormTitle').textContent = '添加工具';
@@ -390,7 +402,8 @@ document.querySelectorAll('#adminModal .tab-btn').forEach(btn => {
         } else {
             document.getElementById('adminTools').style.display = 'none';
             document.getElementById('adminUsers').style.display = 'block';
-            // TODO: 加载用户列表
+            // 加载用户列表
+            loadAdminUsers();
         }
     });
 });

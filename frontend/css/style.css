@@ -489,6 +489,21 @@ body {
     font-weight: 600;
 }
 
+.role-select {
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    background: var(--card-bg);
+    cursor: pointer;
+}
+
+.role-select:disabled {
+    background: var(--bg-color);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 .info-item {
     display: flex;
     padding: 12px 0;

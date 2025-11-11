@@ -10,6 +10,7 @@ const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/auth');
 const toolRoutes = require('./routes/tools');
 const versionRoutes = require('./routes/version');
+const userRoutes = require('./routes/users');
 
 // 连接数据库
 connectDB();
@@ -41,6 +42,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/tools', toolRoutes);
 app.use('/api/version', versionRoutes);
+app.use('/api/users', userRoutes);
 
 // 404 处理
 app.use((req, res) => {
