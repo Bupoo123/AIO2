@@ -34,7 +34,7 @@ MONGODB_URI=mongodb://localhost:27017/jeyi-toolhub
 JWT_SECRET=your-secret-key-change-this-in-production
 PORT=3000
 NODE_ENV=development
-FRONTEND_URL=http://localhost:8080
+FRONTEND_URL=http://localhost:3001
 ```
 
 3. **启动 MongoDB**
@@ -59,15 +59,15 @@ npm run dev
 ```bash
 # 使用 Python
 cd frontend
-python3 -m http.server 8080
+python3 -m http.server 3001
 
 # 或使用 Node.js http-server
-npx http-server -p 8080
+npx http-server -p 3001
 
 # 或使用 VS Code Live Server 插件
 ```
 
-前端服务将在 `http://localhost:8080` 启动。
+前端服务将在 `http://localhost:3001` 启动。
 
 ## 📁 项目结构
 

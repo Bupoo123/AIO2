@@ -139,22 +139,17 @@ function renderCategories(categories) {
     container.innerHTML = allItem + categoryItems;
 }
 
-// 打开工具
+// 打开工具（在新标签页打开）
 function openTool(toolId) {
     getToolById(toolId).then(tool => {
-        const modal = document.getElementById('toolModal');
-        const iframe = document.getElementById('toolIframe');
-        const title = document.getElementById('toolModalTitle');
-
-        title.textContent = tool.name;
-        iframe.src = tool.github_url;
-        modal.style.display = 'flex';
+        // 直接在新标签页打开工具
+        window.open(tool.github_url, '_blank');
     }).catch(error => {
         alert('加载工具失败: ' + error.message);
     });
 }
 
-// 关闭工具模态框
+// 关闭工具模态框（保留函数以防需要，但不再使用）
 function closeToolModal() {
     const modal = document.getElementById('toolModal');
     const iframe = document.getElementById('toolIframe');
