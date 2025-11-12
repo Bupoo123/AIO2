@@ -50,12 +50,14 @@ app.use('/users', userRoutes);
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: '接口不存在'
+    message: '接口不存在',
+    path: req.path
   });
 });
 
 // 错误处理中间件（必须放在最后）
 app.use(errorHandler);
 
+// Vercel serverless 函数导出
 module.exports = app;
 
