@@ -1,5 +1,8 @@
 // API 基础配置
-const API_BASE_URL = 'http://localhost:3000/api';
+// 开发环境使用 localhost，生产环境会自动使用相对路径或环境变量
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api' 
+    : '/api';
 
 // 获取 token
 function getToken() {

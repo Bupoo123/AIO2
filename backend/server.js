@@ -55,10 +55,17 @@ app.use((req, res) => {
 // 错误处理中间件（必须放在最后）
 app.use(errorHandler);
 
-// 启动服务器
+// 启动服务器（兼容 Vercel 和本地开发）
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 服务器运行在 http://localhost:${PORT}`);
-  console.log(`📝 环境: ${process.env.NODE_ENV || 'development'}`);
-});
+
+// Vercel 使用 serverless 函数，不需要 listen
+// 检查是否在 Vercel 环境（通过 VERCEL 环境变量或 serverless 函数）
+if (process.env.VERCEL || process.env.VERCEL_ENV) {
+  module.exports = app;
+} else {
+  app.listen(PORT, () => {
+    console.log(`🚀 服务器运行在 http://localhost:${PORT}`);
+    console.log(`📝 环境: ${process.env.NODE_ENV || 'development'}`);
+  });
+}
 
