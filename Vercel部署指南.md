@@ -67,10 +67,15 @@
 3. **配置项目**
    
    **项目设置**：
-   - Framework Preset: **Other**
-   - Root Directory: **`.`**（项目根目录）
-   - Build Command: **留空**（不需要构建）
-   - Output Directory: **留空**
+   - Framework Preset: **Other** ⭐（重要：必须选择 Other，不要选择其他框架）
+   - Root Directory: **`.`**（项目根目录，保持默认）
+   - Build Command: **留空**（不需要构建，前端是静态文件）
+   - Output Directory: **留空**（不需要输出目录）
+   
+   ⚠️ **重要提示**：
+   - 不要选择 React、Vue、Next.js 等框架预设
+   - 不要选择 Angular、Svelte 等
+   - 必须选择 **Other** 或保持默认（None）
 
    **环境变量**（重要！）：
    点击 "Environment Variables" 添加以下变量：

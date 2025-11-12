@@ -5,12 +5,15 @@ require('dotenv').config();
 
 async function createAdmin() {
   try {
-    // 连接数据库
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/jeyi-toolhub', {
+    // 连接数据库（优先使用环境变量，如果没有则使用默认值）
+    const mongoURI = process.env.MONGODB_URI || 
+      'mongodb+srv://AIO2admin:31493170@cluster0.gpq75zd.mongodb.net/jeyi-toolhub?retryWrites=true&w=majority';
+    
+    await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('✅ 已连接到 MongoDB');
+    console.log('✅ 已连接到 MongoDB Atlas');
 
     // 检查用户是否已存在
     const existingUser = await User.findOne({
