@@ -23,8 +23,10 @@ const app = express();
 // 安全中间件
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
-  credentials: true
+  origin: process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? false : '*'),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // 解析 JSON 请求体
