@@ -31,12 +31,24 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 健康检查
+// 健康检查（支持 /api/health 和 /health）
 app.get('/health', (req, res) => {
   res.json({
     success: true,
     message: '服务运行正常',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    path: req.path,
+    url: req.url
+  });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: '服务运行正常',
+    timestamp: new Date().toISOString(),
+    path: req.path,
+    url: req.url
   });
 });
 
