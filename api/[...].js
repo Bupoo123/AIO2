@@ -1,5 +1,5 @@
 // Vercel Serverless Function 入口 - 使用动态路由捕获所有 /api/* 请求
-// 注意：Vercel 的 [...].js 会捕获所有 /api/* 路径，req.url 会包含完整路径
+// 注意：Vercel 的 [...].js 会捕获所有 /api/* 路径
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -32,6 +32,20 @@ app.use(cors({
 // 解析 JSON 请求体
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 中间件：处理 Vercel 动态路由的路径
+// Vercel 的 [...].js 会将路径作为参数传递，需要从 req.url 中提取实际路径
+app.use((req, res, next) => {
+  // 如果路径以 /api 开头，移除 /api 前缀
+  if (req.url.startsWith('/api/')) {
+    req.url = req.url.replace('/api', '');
+  }
+  // 如果路径是 /api，改为 /
+  if (req.url === '/api') {
+    req.url = '/';
+  }
+  next();
+});
 
 // 健康检查
 app.get('/health', (req, res) => {
