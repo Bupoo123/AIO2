@@ -19,22 +19,59 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# 检测系统类型
+if [ -f /etc/redhat-release ]; then
+    # CentOS/RHEL 系统
+    OS_TYPE="rhel"
+    PKG_MANAGER="yum"
+elif [ -f /etc/debian_version ]; then
+    # Debian/Ubuntu 系统
+    OS_TYPE="debian"
+    PKG_MANAGER="apt"
+else
+    echo -e "${RED}不支持的系统类型${NC}"
+    exit 1
+fi
+
 # 1. 更新系统
 echo -e "${YELLOW}[1/8] 更新系统...${NC}"
-apt update && apt upgrade -y
+if [ "$OS_TYPE" = "rhel" ]; then
+    yum update -y
+else
+    apt update && apt upgrade -y
+fi
 
 # 2. 安装必要工具
 echo -e "${YELLOW}[2/8] 安装必要工具...${NC}"
-apt install -y git curl wget
+if [ "$OS_TYPE" = "rhel" ]; then
+    yum install -y git curl wget
+else
+    apt install -y git curl wget
+fi
 
 # 3. 检查并安装 Docker
 if ! command -v docker &> /dev/null; then
     echo -e "${YELLOW}[3/8] 安装 Docker...${NC}"
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
-    rm get-docker.sh
+    if [ "$OS_TYPE" = "rhel" ]; then
+        # CentOS/RHEL 安装 Docker
+        yum install -y yum-utils
+        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+        yum install -y docker-ce docker-ce-cli containerd.io
+        systemctl start docker
+        systemctl enable docker
+    else
+        # Debian/Ubuntu 安装 Docker
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sh get-docker.sh
+        rm get-docker.sh
+    fi
 else
     echo -e "${GREEN}[3/8] Docker 已安装${NC}"
+    # 确保 Docker 服务运行
+    if [ "$OS_TYPE" = "rhel" ]; then
+        systemctl start docker
+        systemctl enable docker
+    fi
 fi
 
 # 4. 检查并安装 Docker Compose
