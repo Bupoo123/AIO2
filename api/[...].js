@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const connectDB = require('../backend/config/db');
 const errorHandler = require('../backend/middleware/errorHandler');
+const buildCorsOptions = require('../backend/config/corsOptions');
 
 // 导入路由
 const authRoutes = require('../backend/routes/auth');
@@ -22,12 +23,7 @@ const app = express();
 
 // 安全中间件
 app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? false : '*'),
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors(buildCorsOptions()));
 
 // 解析 JSON 请求体
 app.use(express.json());
