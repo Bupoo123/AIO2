@@ -40,11 +40,18 @@ async function apiRequest(url, options = {}) {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || '请求失败');
+            console.error('API 错误响应:', {
+                url,
+                status: response.status,
+                statusText: response.statusText,
+                data
+            });
+            throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
         }
 
         return data;
     } catch (error) {
+        console.error('API 请求异常:', error);
         throw error;
     }
 }
