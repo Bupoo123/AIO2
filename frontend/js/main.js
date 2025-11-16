@@ -425,6 +425,11 @@ document.getElementById('toolForm').addEventListener('submit', async (e) => {
         access: document.getElementById('toolAccess').value
     };
 
+    if (!isValidToolUrl(toolData.url)) {
+        showMessage('toolFormMessage', '工具链接必须以 http://、https:// 或 / 开头', 'error');
+        return;
+    }
+
     try {
         if (toolId) {
             await updateTool(toolId, toolData);
@@ -477,4 +482,9 @@ document.querySelectorAll('#adminModal .tab-btn').forEach(btn => {
         }
     });
 });
+
+function isValidToolUrl(url) {
+    if (!url) return false;
+    return /^https?:\/\//.test(url) || url.startsWith('/') || url.startsWith('./') || url.startsWith('../');
+}
 

@@ -4,6 +4,11 @@ const Tool = require('../models/Tool');
 const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
 const router = express.Router();
 
+const isValidToolLink = (value) => {
+  if (!value) return false;
+  return /^https?:\/\//.test(value) || value.startsWith('/') || value.startsWith('./') || value.startsWith('../');
+};
+
 // 获取工具列表（根据权限过滤）
 router.get('/', authenticate, async (req, res, next) => {
   try {
@@ -140,9 +145,8 @@ router.post('/', authenticate, requireAdmin, [
   body('url')
     .notEmpty().withMessage('工具链接不能为空')
     .custom((value) => {
-      // 接受 http:// 或 https:// 开头的 URL
-      if (!/^https?:\/\/.+/.test(value)) {
-        throw new Error('请输入有效的链接（必须以 http:// 或 https:// 开头）');
+      if (!isValidToolLink(value)) {
+        throw new Error('请输入有效的链接（支持 http://、https:// 或 / 开头的相对路径）');
       }
       return true;
     }),
@@ -181,8 +185,8 @@ router.put('/:id', authenticate, requireAdmin, [
   body('url')
     .optional()
     .custom((value) => {
-      if (value && !/^https?:\/\/.+/.test(value)) {
-        throw new Error('请输入有效的链接（必须以 http:// 或 https:// 开头）');
+      if (value && !isValidToolLink(value)) {
+        throw new Error('请输入有效的链接（支持 http://、https:// 或 / 开头的相对路径）');
       }
       return true;
     }),
