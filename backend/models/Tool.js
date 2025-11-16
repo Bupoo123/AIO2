@@ -14,14 +14,7 @@ const toolSchema = new mongoose.Schema({
   url: {
     type: String,
     required: [true, '工具链接不能为空'],
-    trim: true,
-    validate: {
-      validator: function(value) {
-        if (!value) return false;
-        return /^https?:\/\//.test(value) || value.startsWith('/') || value.startsWith('./') || value.startsWith('../');
-      },
-      message: '请输入有效的链接（支持 http://、https:// 或 / 开头的相对路径）'
-    }
+    trim: true
   },
   logo: {
     type: String,

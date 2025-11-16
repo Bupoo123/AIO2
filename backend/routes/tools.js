@@ -4,11 +4,6 @@ const Tool = require('../models/Tool');
 const { authenticate, requireAdmin } = require('../middleware/authMiddleware');
 const router = express.Router();
 
-const isValidToolLink = (value) => {
-  if (!value) return false;
-  return /^https?:\/\//.test(value) || value.startsWith('/') || value.startsWith('./') || value.startsWith('../');
-};
-
 // 获取工具列表（根据权限过滤）
 router.get('/', authenticate, async (req, res, next) => {
   try {
@@ -142,14 +137,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
 router.post('/', authenticate, requireAdmin, [
   body('name').notEmpty().withMessage('工具名称不能为空'),
   body('category').notEmpty().withMessage('工具分类不能为空'),
-  body('url')
-    .notEmpty().withMessage('工具链接不能为空')
-    .custom((value) => {
-      if (!isValidToolLink(value)) {
-        throw new Error('请输入有效的链接（支持 http://、https:// 或 / 开头的相对路径）');
-      }
-      return true;
-    }),
+  body('url').notEmpty().withMessage('工具链接不能为空'),
   body('version').optional().trim(),
   body('description').optional().trim(),
   body('icon').optional().trim(),
@@ -182,14 +170,7 @@ router.post('/', authenticate, requireAdmin, [
 router.put('/:id', authenticate, requireAdmin, [
   body('name').optional().notEmpty().withMessage('工具名称不能为空'),
   body('category').optional().notEmpty().withMessage('工具分类不能为空'),
-  body('url')
-    .optional()
-    .custom((value) => {
-      if (value && !isValidToolLink(value)) {
-        throw new Error('请输入有效的链接（支持 http://、https:// 或 / 开头的相对路径）');
-      }
-      return true;
-    }),
+  body('url').optional().notEmpty().withMessage('工具链接不能为空'),
   body('logo').optional().trim(),
   body('access').optional().isIn(['all', 'admin', '研发', '非研发']).withMessage('访问权限只能是 all、admin、研发 或 非研发')
 ], async (req, res, next) => {
