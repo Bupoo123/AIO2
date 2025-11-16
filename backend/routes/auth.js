@@ -31,8 +31,12 @@ router.post('/register', [
   body('user_type').isIn(['研发', '非研发']).withMessage('用户类型必须是"研发"或"非研发"')
 ], async (req, res, next) => {
   try {
+    // 添加调试日志
+    console.log('注册请求数据:', JSON.stringify(req.body, null, 2));
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('验证错误:', errors.array());
       return res.status(400).json({
         success: false,
         message: errors.array().map(e => e.msg).join(', ')
@@ -40,6 +44,16 @@ router.post('/register', [
     }
 
     const { employee_id, email, password, user_type } = req.body;
+    
+    // 验证必要字段
+    if (!employee_id) {
+      return res.status(400).json({
+        success: false,
+        message: '工号不能为空'
+      });
+    }
+    
+    console.log('准备创建用户，employee_id:', employee_id);
 
     // 检查用户是否已存在（通过工号或邮箱）
     const existingUser = await User.findOne({
@@ -54,16 +68,20 @@ router.post('/register', [
     }
 
     // 创建新用户（使用工号作为用户名）
+    console.log('创建用户对象，username:', employee_id, 'employee_id:', employee_id);
     const user = new User({
-      username: employee_id, // 使用工号作为用户名
-      email,
-      employee_id,
+      username: employee_id.trim(), // 使用工号作为用户名，确保去除空格
+      email: email.trim().toLowerCase(),
+      employee_id: employee_id.trim(),
       user_type: user_type || '非研发',
       password_hash: password // 会在 pre('save') 中自动加密
     });
+    
+    console.log('用户对象创建完成，username:', user.username);
 
     try {
       await user.save();
+      console.log('用户保存成功');
     } catch (error) {
       // 处理 Mongoose 验证错误
       if (error.name === 'ValidationError') {
