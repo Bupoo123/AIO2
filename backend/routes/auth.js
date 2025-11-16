@@ -72,16 +72,19 @@ router.post('/register', [
     }
 
     // 创建新用户（使用工号作为用户名）
-    console.log('创建用户对象，username:', employee_id, 'employee_id:', employee_id);
+    console.log('创建用户对象，employee_id:', employee_id, '类型:', typeof employee_id);
+    const trimmedEmployeeId = String(employee_id).trim();
+    console.log('处理后的工号:', trimmedEmployeeId, '长度:', trimmedEmployeeId.length);
+    
     const user = new User({
-      username: employee_id.trim(), // 使用工号作为用户名，确保去除空格
-      email: email.trim().toLowerCase(),
-      employee_id: employee_id.trim(),
+      username: trimmedEmployeeId, // 使用工号作为用户名，确保去除空格
+      email: String(email).trim().toLowerCase(),
+      employee_id: trimmedEmployeeId,
       user_type: user_type || '非研发',
       password_hash: password // 会在 pre('save') 中自动加密
     });
     
-    console.log('用户对象创建完成，username:', user.username);
+    console.log('用户对象创建完成，username:', user.username, '类型:', typeof user.username);
 
     try {
       await user.save();
