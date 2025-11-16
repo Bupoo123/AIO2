@@ -426,11 +426,13 @@ document.getElementById('toolForm').addEventListener('submit', async (e) => {
     };
 
     try {
+        console.log('提交工具数据:', toolData);
         if (toolId) {
             await updateTool(toolId, toolData);
             showMessage('toolFormMessage', '工具更新成功', 'success');
         } else {
-            await createTool(toolData);
+            const result = await createTool(toolData);
+            console.log('创建工具成功:', result);
             showMessage('toolFormMessage', '工具创建成功', 'success');
         }
         setTimeout(() => {
@@ -439,7 +441,9 @@ document.getElementById('toolForm').addEventListener('submit', async (e) => {
             loadTools();
         }, 1500);
     } catch (error) {
-        showMessage('toolFormMessage', error.message, 'error');
+        console.error('创建/更新工具失败:', error);
+        console.error('错误详情:', error.response || error.message);
+        showMessage('toolFormMessage', error.message || '操作失败，请查看控制台', 'error');
     }
 });
 
