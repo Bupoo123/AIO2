@@ -11,7 +11,10 @@
     <div id="loginPage" class="page">
         <div class="login-container">
             <div class="login-box">
-                <h1 class="logo">🧩 杰毅生物研发工具集</h1>
+                <div class="logo-header">
+                    <img src="/assets/images/logo.png" alt="杰毅生物" class="login-logo">
+                </div>
+                <h1 class="logo">杰毅生物研发工具集</h1>
                 <div class="login-tabs">
                     <button class="tab-btn active" data-tab="login">登录</button>
                     <button class="tab-btn" data-tab="register">注册</button>
@@ -33,12 +36,20 @@
                 <!-- 注册表单 -->
                 <form id="registerForm" class="auth-form" style="display: none;">
                     <div class="form-group">
-                        <label>用户名</label>
-                        <input type="text" id="registerUsername" required minlength="3" maxlength="20">
+                        <label>工号（格式：M0001-M9999）</label>
+                        <input type="text" id="registerEmployeeId" required pattern="^M\d{4}$" placeholder="M0001">
                     </div>
                     <div class="form-group">
-                        <label>邮箱</label>
-                        <input type="email" id="registerEmail" required>
+                        <label>邮箱（必须是 @matridx.com）</label>
+                        <input type="email" id="registerEmail" required placeholder="xxx@matridx.com">
+                    </div>
+                    <div class="form-group">
+                        <label>用户类型</label>
+                        <select id="registerUserType" required>
+                            <option value="">请选择</option>
+                            <option value="研发">研发</option>
+                            <option value="非研发">非研发</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>密码</label>
@@ -61,7 +72,10 @@
         <!-- 顶部导航栏 -->
         <header class="header">
             <div class="header-left">
-                <h1 class="logo-small">🧩 杰毅生物研发工具集</h1>
+                <div class="header-logo">
+                    <img src="/assets/images/logo.png" alt="杰毅生物" class="header-logo-img">
+                    <h1 class="logo-small">杰毅生物研发工具集</h1>
+                </div>
             </div>
             <div class="header-center">
                 <input type="text" id="searchInput" class="search-input" placeholder="搜索工具...">
@@ -138,6 +152,7 @@
                 <div class="info-item">
                     <label>邮箱：</label>
                     <span id="infoEmail"></span>
+                    <button class="btn btn-secondary" onclick="showEditEmailModal()" style="margin-left: 10px; padding: 4px 12px; font-size: 12px;">修改</button>
                 </div>
                 <div class="info-item">
                     <label>角色：</label>
@@ -186,6 +201,29 @@
         </div>
     </div>
 
+    <!-- 修改邮箱模态框 -->
+    <div id="editEmailModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>修改邮箱</h2>
+                <button class="btn-close" onclick="closeEditEmailModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="editEmailForm">
+                    <div class="form-group">
+                        <label>新邮箱（必须是 @matridx.com）</label>
+                        <input type="email" id="newEmail" required placeholder="xxx@matridx.com">
+                    </div>
+                    <div id="emailMessage" class="message"></div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">确认修改</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeEditEmailModal()">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- 管理后台模态框 -->
     <div id="adminModal" class="modal" style="display: none;">
         <div class="modal-content modal-large">
@@ -225,9 +263,10 @@
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th>用户名</th>
+                                <th>用户名/工号</th>
                                 <th>邮箱</th>
                                 <th>角色</th>
+                                <th>用户类型</th>
                                 <th>注册时间</th>
                                 <th>操作</th>
                             </tr>
@@ -259,11 +298,16 @@
                         <input type="text" id="toolCategory" required>
                     </div>
                     <div class="form-group">
-                        <label>GitHub链接 *</label>
-                        <input type="url" id="toolGithubUrl" required>
+                        <label>工具链接 *</label>
+                        <input type="url" id="toolUrl" required placeholder="https://...">
                     </div>
                     <div class="form-group">
-                        <label>图标</label>
+                        <label>LOGO（图片URL）</label>
+                        <input type="url" id="toolLogo" placeholder="https://... 或 /assets/images/logo.png">
+                        <small style="color: #666; font-size: 12px;">支持外部链接或相对路径</small>
+                    </div>
+                    <div class="form-group">
+                        <label>图标（备用）</label>
                         <input type="text" id="toolIcon" placeholder="🔧">
                     </div>
                     <div class="form-group">
@@ -279,6 +323,8 @@
                         <select id="toolAccess">
                             <option value="all">所有用户</option>
                             <option value="admin">仅管理员</option>
+                            <option value="研发">仅研发人员</option>
+                            <option value="非研发">仅非研发人员</option>
                         </select>
                     </div>
                     <div id="toolFormMessage" class="message"></div>

@@ -14,15 +14,21 @@ const generateToken = (userId) => {
 
 // 用户注册
 router.post('/register', [
-  body('username').trim().isLength({ min: 3, max: 20 }).withMessage('用户名长度应在3-20个字符之间'),
-  body('email').isEmail().withMessage('请输入有效的邮箱地址'),
+  body('employee_id').matches(/^M\d{4}$/).withMessage('工号格式错误，应为 M0001-M9999'),
+  body('email').isEmail().withMessage('请输入有效的邮箱地址').custom((value) => {
+    if (!value.endsWith('@matridx.com')) {
+      throw new Error('邮箱必须是公司邮箱（@matridx.com）');
+    }
+    return true;
+  }),
   body('password').isLength({ min: 6 }).withMessage('密码至少6个字符'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error('两次输入的密码不一致');
     }
     return true;
-  })
+  }),
+  body('user_type').isIn(['研发', '非研发']).withMessage('用户类型必须是"研发"或"非研发"')
 ], async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -33,24 +39,26 @@ router.post('/register', [
       });
     }
 
-    const { username, email, password } = req.body;
+    const { employee_id, email, password, user_type } = req.body;
 
-    // 检查用户是否已存在
+    // 检查用户是否已存在（通过工号或邮箱）
     const existingUser = await User.findOne({
-      $or: [{ username }, { email }]
+      $or: [{ employee_id }, { email }]
     });
 
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: '用户名或邮箱已存在'
+        message: '工号或邮箱已存在'
       });
     }
 
-    // 创建新用户
+    // 创建新用户（使用工号作为用户名）
     const user = new User({
-      username,
+      username: employee_id, // 使用工号作为用户名
       email,
+      employee_id,
+      user_type: user_type || '非研发',
       password_hash: password // 会在 pre('save') 中自动加密
     });
 
@@ -68,7 +76,9 @@ router.post('/register', [
           id: user._id,
           username: user.username,
           email: user.email,
-          role: user.role
+          role: user.role,
+          user_type: user.user_type,
+          employee_id: user.employee_id
         }
       }
     });
@@ -142,6 +152,8 @@ router.post('/login', [
           username: user.username,
           email: user.email,
           role: user.role,
+          user_type: user.user_type,
+          employee_id: user.employee_id,
           last_login: user.last_login
         }
       }
@@ -163,6 +175,8 @@ router.get('/me', authenticate, async (req, res, next) => {
           username: user.username,
           email: user.email,
           role: user.role,
+          user_type: user.user_type,
+          employee_id: user.employee_id,
           created_at: user.created_at,
           last_login: user.last_login
         }
@@ -212,6 +226,71 @@ router.put('/password', authenticate, [
     res.json({
       success: true,
       message: '密码修改成功'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 管理员修改自己的邮箱
+router.put('/profile', authenticate, [
+  body('email').optional().isEmail().withMessage('请输入有效的邮箱地址').custom((value) => {
+    if (value && !value.endsWith('@matridx.com')) {
+      throw new Error('邮箱必须是公司邮箱（@matridx.com）');
+    }
+    return true;
+  })
+], async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: errors.array().map(e => e.msg).join(', ')
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: '用户不存在'
+      });
+    }
+
+    // 更新邮箱（如果提供）
+    if (req.body.email) {
+      // 检查邮箱是否已被其他用户使用
+      const existingUser = await User.findOne({ 
+        email: req.body.email,
+        _id: { $ne: user._id }
+      });
+      
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: '该邮箱已被使用'
+        });
+      }
+      
+      user.email = req.body.email;
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: '个人信息更新成功',
+      data: {
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          user_type: user.user_type,
+          employee_id: user.employee_id
+        }
+      }
     });
   } catch (error) {
     next(error);

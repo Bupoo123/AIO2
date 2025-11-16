@@ -11,11 +11,16 @@ const toolSchema = new mongoose.Schema({
     required: [true, '工具分类不能为空'],
     trim: true
   },
-  github_url: {
+  url: {
     type: String,
-    required: [true, 'GitHub链接不能为空'],
+    required: [true, '工具链接不能为空'],
     trim: true,
     match: [/^https?:\/\/.+/, '请输入有效的URL']
+  },
+  logo: {
+    type: String,
+    trim: true,
+    default: ''
   },
   icon: {
     type: String,
@@ -32,7 +37,7 @@ const toolSchema = new mongoose.Schema({
   },
   access: {
     type: String,
-    enum: ['all', 'admin'],
+    enum: ['all', 'admin', '研发', '非研发'],
     default: 'all'
   },
   created_at: {

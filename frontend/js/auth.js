@@ -66,13 +66,14 @@ function showMessage(elementId, message, type = 'success') {
 }
 
 // 用户注册
-async function register(username, email, password, confirmPassword) {
+async function register(employeeId, email, userType, password, confirmPassword) {
     try {
         const response = await apiRequest('/auth/register', {
             method: 'POST',
             body: JSON.stringify({
-                username,
+                employee_id: employeeId,
                 email,
+                user_type: userType,
                 password,
                 confirmPassword
             })
@@ -142,6 +143,19 @@ async function changePassword(oldPassword, newPassword, confirmPassword) {
 function logout() {
     removeToken();
     window.location.reload();
+}
+
+// 修改邮箱
+async function updateEmail(newEmail) {
+    try {
+        const response = await apiRequest('/auth/profile', {
+            method: 'PUT',
+            body: JSON.stringify({ email: newEmail })
+        });
+        return response;
+    } catch (error) {
+        throw error;
+    }
 }
 
 // 检查登录状态

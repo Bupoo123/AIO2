@@ -116,9 +116,16 @@ function renderToolCards(tools) {
     }
 
     emptyState.style.display = 'none';
-    container.innerHTML = tools.map(tool => `
+    container.innerHTML = tools.map(tool => {
+        // 显示logo或icon
+        const logoHtml = tool.logo 
+            ? `<img src="${escapeHtml(tool.logo)}" alt="${escapeHtml(tool.name)}" class="tool-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+               <div class="tool-icon" style="display:none;">${tool.icon || '🔧'}</div>`
+            : `<div class="tool-icon">${tool.icon || '🔧'}</div>`;
+        
+        return `
         <div class="tool-card" onclick="openTool('${tool._id}')">
-            <div class="tool-icon">${tool.icon || '🔧'}</div>
+            ${logoHtml}
             <div class="tool-name">${escapeHtml(tool.name)}</div>
             <div class="tool-description">${escapeHtml(tool.description || '暂无描述')}</div>
             <div class="tool-meta">
@@ -126,7 +133,8 @@ function renderToolCards(tools) {
                 <span class="tool-version">v${escapeHtml(tool.version)}</span>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 // 渲染分类列表
@@ -142,8 +150,8 @@ function renderCategories(categories) {
 // 打开工具（在新标签页打开）
 function openTool(toolId) {
     getToolById(toolId).then(tool => {
-        // 直接在新标签页打开工具
-        window.open(tool.github_url, '_blank');
+        // 直接在新标签页打开工具（使用url字段）
+        window.open(tool.url || tool.github_url, '_blank');
     }).catch(error => {
         alert('加载工具失败: ' + error.message);
     });

@@ -28,6 +28,16 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
+  user_type: {
+    type: String,
+    enum: ['研发', '非研发'],
+    default: '非研发'
+  },
+  employee_id: {
+    type: String,
+    trim: true,
+    match: [/^M\d{4}$/, '工号格式错误，应为 M0001-M9999']
+  },
   created_at: {
     type: Date,
     default: Date.now

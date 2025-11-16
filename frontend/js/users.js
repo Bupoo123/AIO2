@@ -53,7 +53,7 @@ function renderUserList(users, currentUserId) {
     const container = document.getElementById('adminUsersList');
     
     if (!users || users.length === 0) {
-        container.innerHTML = '<tr><td colspan="5" style="text-align: center;">暂无用户</td></tr>';
+        container.innerHTML = '<tr><td colspan="6" style="text-align: center;">暂无用户</td></tr>';
         return;
     }
 
@@ -68,7 +68,7 @@ function renderUserList(users, currentUserId) {
         
         return `
             <tr>
-                <td>${escapeHtml(user.username)}</td>
+                <td>${escapeHtml(user.username || user.employee_id || '')}</td>
                 <td>${escapeHtml(user.email)}</td>
                 <td>
                     <select class="role-select" data-user-id="${user._id}" ${isCurrentUser ? 'disabled' : ''}>
@@ -76,6 +76,7 @@ function renderUserList(users, currentUserId) {
                         <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>管理员</option>
                     </select>
                 </td>
+                <td>${user.user_type || '非研发'}</td>
                 <td>${createdDate}</td>
                 <td>
                     ${isCurrentUser 

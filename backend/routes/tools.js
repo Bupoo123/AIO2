@@ -9,13 +9,26 @@ router.get('/', authenticate, async (req, res, next) => {
   try {
     const { category, search } = req.query;
     const isAdmin = req.user.role === 'admin';
+    const userType = req.user.user_type || '非研发';
 
     // 构建查询条件
     const query = {};
     
-    // 权限过滤：普通用户只能看到 access='all' 的工具
-    if (!isAdmin) {
-      query.access = 'all';
+    // 权限过滤
+    if (isAdmin) {
+      // 管理员可以看到所有工具
+      query.$or = [
+        { access: 'all' },
+        { access: 'admin' },
+        { access: '研发' },
+        { access: '非研发' }
+      ];
+    } else {
+      // 普通用户根据用户类型过滤
+      query.$or = [
+        { access: 'all' },
+        { access: userType }
+      ];
     }
 
     // 分类过滤
@@ -25,10 +38,18 @@ router.get('/', authenticate, async (req, res, next) => {
 
     // 搜索过滤（工具名称或描述）
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+      const searchQuery = {
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } }
+        ]
+      };
+      // 合并搜索条件和权限条件
+      query.$and = [
+        { $or: query.$or },
+        searchQuery
       ];
+      delete query.$or;
     }
 
     const tools = await Tool.find(query).sort({ created_at: -1 });
@@ -49,7 +70,15 @@ router.get('/', authenticate, async (req, res, next) => {
 router.get('/categories', authenticate, async (req, res, next) => {
   try {
     const isAdmin = req.user.role === 'admin';
-    const query = isAdmin ? {} : { access: 'all' };
+    const userType = req.user.user_type || '非研发';
+    
+    let query = {};
+    if (!isAdmin) {
+      query.$or = [
+        { access: 'all' },
+        { access: userType }
+      ];
+    }
     
     const categories = await Tool.distinct('category', query);
     
@@ -77,11 +106,22 @@ router.get('/:id', authenticate, async (req, res, next) => {
     }
 
     // 权限检查
-    if (tool.access === 'admin' && req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: '无权访问此工具'
-      });
+    const isAdmin = req.user.role === 'admin';
+    const userType = req.user.user_type || '非研发';
+    
+    if (!isAdmin) {
+      if (tool.access === 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: '无权访问此工具'
+        });
+      }
+      if (tool.access !== 'all' && tool.access !== userType) {
+        return res.status(403).json({
+          success: false,
+          message: '无权访问此工具'
+        });
+      }
     }
 
     res.json({
@@ -97,11 +137,12 @@ router.get('/:id', authenticate, async (req, res, next) => {
 router.post('/', authenticate, requireAdmin, [
   body('name').notEmpty().withMessage('工具名称不能为空'),
   body('category').notEmpty().withMessage('工具分类不能为空'),
-  body('github_url').isURL().withMessage('请输入有效的GitHub链接'),
+  body('url').isURL().withMessage('请输入有效的链接'),
   body('version').optional().trim(),
   body('description').optional().trim(),
   body('icon').optional().trim(),
-  body('access').optional().isIn(['all', 'admin']).withMessage('访问权限只能是 all 或 admin')
+  body('logo').optional().trim(),
+  body('access').optional().isIn(['all', 'admin', '研发', '非研发']).withMessage('访问权限只能是 all、admin、研发 或 非研发')
 ], async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -129,8 +170,9 @@ router.post('/', authenticate, requireAdmin, [
 router.put('/:id', authenticate, requireAdmin, [
   body('name').optional().notEmpty().withMessage('工具名称不能为空'),
   body('category').optional().notEmpty().withMessage('工具分类不能为空'),
-  body('github_url').optional().isURL().withMessage('请输入有效的GitHub链接'),
-  body('access').optional().isIn(['all', 'admin']).withMessage('访问权限只能是 all 或 admin')
+  body('url').optional().isURL().withMessage('请输入有效的链接'),
+  body('logo').optional().trim(),
+  body('access').optional().isIn(['all', 'admin', '研发', '非研发']).withMessage('访问权限只能是 all、admin、研发 或 非研发')
 ], async (req, res, next) => {
   try {
     const errors = validationResult(req);

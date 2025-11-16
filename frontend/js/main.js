@@ -103,18 +103,36 @@ function bindEvents() {
     // 注册表单
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const username = document.getElementById('registerUsername').value;
+        const employeeId = document.getElementById('registerEmployeeId').value;
         const email = document.getElementById('registerEmail').value;
+        const userType = document.getElementById('registerUserType').value;
         const password = document.getElementById('registerPassword').value;
         const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+        // 验证工号格式
+        if (!/^M\d{4}$/.test(employeeId)) {
+            showMessage('authMessage', '工号格式错误，应为 M0001-M9999', 'error');
+            return;
+        }
+
+        // 验证邮箱域名
+        if (!email.endsWith('@matridx.com')) {
+            showMessage('authMessage', '邮箱必须是公司邮箱（@matridx.com）', 'error');
+            return;
+        }
 
         if (password !== confirmPassword) {
             showMessage('authMessage', '两次输入的密码不一致', 'error');
             return;
         }
 
+        if (!userType) {
+            showMessage('authMessage', '请选择用户类型', 'error');
+            return;
+        }
+
         try {
-            const user = await register(username, email, password, confirmPassword);
+            const user = await register(employeeId, email, userType, password, confirmPassword);
             currentUser = user;
             showMainPage();
             await loadMainPageData();
@@ -230,6 +248,11 @@ async function showUserInfo() {
         document.getElementById('infoLastLogin').textContent = user.last_login 
             ? new Date(user.last_login).toLocaleString('zh-CN')
             : '从未登录';
+        // 只有管理员可以修改邮箱
+        const editEmailBtn = document.querySelector('#infoEmail + button');
+        if (editEmailBtn) {
+            editEmailBtn.style.display = user.role === 'admin' ? 'inline-block' : 'none';
+        }
         document.getElementById('userInfoModal').style.display = 'flex';
     } catch (error) {
         alert('获取用户信息失败: ' + error.message);
@@ -253,6 +276,51 @@ function closeChangePasswordModal() {
     document.getElementById('changePasswordModal').style.display = 'none';
     document.getElementById('changePasswordForm').reset();
 }
+
+// 显示修改邮箱模态框
+function showEditEmailModal() {
+    document.getElementById('editEmailModal').style.display = 'flex';
+    document.getElementById('editEmailForm').reset();
+    document.getElementById('emailMessage').style.display = 'none';
+    // 填充当前邮箱
+    if (currentUser && currentUser.email) {
+        document.getElementById('newEmail').value = currentUser.email;
+    }
+}
+
+// 关闭修改邮箱模态框
+function closeEditEmailModal() {
+    document.getElementById('editEmailModal').style.display = 'none';
+    document.getElementById('editEmailForm').reset();
+}
+
+// 修改邮箱表单
+document.getElementById('editEmailForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newEmail = document.getElementById('newEmail').value;
+
+    // 验证邮箱域名
+    if (!newEmail.endsWith('@matridx.com')) {
+        showMessage('emailMessage', '邮箱必须是公司邮箱（@matridx.com）', 'error');
+        return;
+    }
+
+    try {
+        const response = await updateEmail(newEmail);
+        if (response.success) {
+            showMessage('emailMessage', '邮箱修改成功', 'success');
+            // 更新当前用户信息
+            currentUser.email = newEmail;
+            setTimeout(() => {
+                closeEditEmailModal();
+                closeUserInfoModal();
+                showUserInfo(); // 刷新用户信息
+            }, 1500);
+        }
+    } catch (error) {
+        showMessage('emailMessage', error.message, 'error');
+    }
+});
 
 // 显示版本更新通知
 function showUpdateNotification(updates) {
@@ -284,7 +352,7 @@ async function loadAdminTools() {
                 <td>${escapeHtml(tool.name)}</td>
                 <td>${escapeHtml(tool.category)}</td>
                 <td>${escapeHtml(tool.version)}</td>
-                <td>${tool.access === 'admin' ? '仅管理员' : '所有用户'}</td>
+                <td>${tool.access === 'admin' ? '仅管理员' : tool.access === '研发' ? '仅研发人员' : tool.access === '非研发' ? '仅非研发人员' : '所有用户'}</td>
                 <td>
                     <button class="btn btn-secondary" onclick="editTool('${tool._id}')">编辑</button>
                     <button class="btn btn-secondary" onclick="deleteToolConfirm('${tool._id}')">删除</button>
@@ -323,7 +391,8 @@ async function editTool(toolId) {
         document.getElementById('toolFormTitle').textContent = '编辑工具';
         document.getElementById('toolName').value = tool.name;
         document.getElementById('toolCategory').value = tool.category;
-        document.getElementById('toolGithubUrl').value = tool.github_url;
+        document.getElementById('toolUrl').value = tool.url || tool.github_url || '';
+        document.getElementById('toolLogo').value = tool.logo || '';
         document.getElementById('toolIcon').value = tool.icon || '';
         document.getElementById('toolVersion').value = tool.version;
         document.getElementById('toolDescription').value = tool.description || '';
@@ -348,7 +417,8 @@ document.getElementById('toolForm').addEventListener('submit', async (e) => {
     const toolData = {
         name: document.getElementById('toolName').value,
         category: document.getElementById('toolCategory').value,
-        github_url: document.getElementById('toolGithubUrl').value,
+        url: document.getElementById('toolUrl').value,
+        logo: document.getElementById('toolLogo').value || '',
         icon: document.getElementById('toolIcon').value || '🔧',
         version: document.getElementById('toolVersion').value || '1.0.0',
         description: document.getElementById('toolDescription').value,
