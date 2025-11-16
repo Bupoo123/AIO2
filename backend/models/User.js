@@ -7,8 +7,9 @@ const userSchema = new mongoose.Schema({
     required: [true, '用户名不能为空'],
     unique: true,
     trim: true,
-    minlength: [3, '用户名至少3个字符'],
-    maxlength: [20, '用户名最多20个字符']
+    // 工号格式 M0001-M9999，长度为5，所以最小长度改为5，最大长度也改为5
+    minlength: [5, '用户名至少5个字符'],
+    maxlength: [5, '用户名最多5个字符']
   },
   email: {
     type: String,
@@ -35,6 +36,8 @@ const userSchema = new mongoose.Schema({
   },
   employee_id: {
     type: String,
+    required: [true, '工号不能为空'],
+    unique: true,
     trim: true,
     match: [/^M\d{4}$/, '工号格式错误，应为 M0001-M9999']
   },
