@@ -145,8 +145,12 @@ router.post('/', authenticate, requireAdmin, [
   body('access').optional().isIn(['all', 'admin', '研发', '非研发']).withMessage('访问权限只能是 all、admin、研发 或 非研发')
 ], async (req, res, next) => {
   try {
+    // 调试日志
+    console.log('创建工具请求:', JSON.stringify(req.body, null, 2));
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('验证错误:', errors.array());
       return res.status(400).json({
         success: false,
         message: errors.array().map(e => e.msg).join(', ')
@@ -154,7 +158,9 @@ router.post('/', authenticate, requireAdmin, [
     }
 
     const tool = new Tool(req.body);
+    console.log('准备保存工具，url:', tool.url);
     await tool.save();
+    console.log('工具保存成功');
 
     res.status(201).json({
       success: true,
