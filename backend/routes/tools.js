@@ -137,7 +137,15 @@ router.get('/:id', authenticate, async (req, res, next) => {
 router.post('/', authenticate, requireAdmin, [
   body('name').notEmpty().withMessage('工具名称不能为空'),
   body('category').notEmpty().withMessage('工具分类不能为空'),
-  body('url').isURL().withMessage('请输入有效的链接'),
+  body('url')
+    .notEmpty().withMessage('工具链接不能为空')
+    .custom((value) => {
+      // 接受 http:// 或 https:// 开头的 URL
+      if (!/^https?:\/\/.+/.test(value)) {
+        throw new Error('请输入有效的链接（必须以 http:// 或 https:// 开头）');
+      }
+      return true;
+    }),
   body('version').optional().trim(),
   body('description').optional().trim(),
   body('icon').optional().trim(),
@@ -170,7 +178,14 @@ router.post('/', authenticate, requireAdmin, [
 router.put('/:id', authenticate, requireAdmin, [
   body('name').optional().notEmpty().withMessage('工具名称不能为空'),
   body('category').optional().notEmpty().withMessage('工具分类不能为空'),
-  body('url').optional().isURL().withMessage('请输入有效的链接'),
+  body('url')
+    .optional()
+    .custom((value) => {
+      if (value && !/^https?:\/\/.+/.test(value)) {
+        throw new Error('请输入有效的链接（必须以 http:// 或 https:// 开头）');
+      }
+      return true;
+    }),
   body('logo').optional().trim(),
   body('access').optional().isIn(['all', 'admin', '研发', '非研发']).withMessage('访问权限只能是 all、admin、研发 或 非研发')
 ], async (req, res, next) => {
