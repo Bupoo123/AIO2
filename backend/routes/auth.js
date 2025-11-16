@@ -62,7 +62,27 @@ router.post('/register', [
       password_hash: password // 会在 pre('save') 中自动加密
     });
 
-    await user.save();
+    try {
+      await user.save();
+    } catch (error) {
+      // 处理 Mongoose 验证错误
+      if (error.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map(e => e.message);
+        return res.status(400).json({
+          success: false,
+          message: messages.join(', ')
+        });
+      }
+      // 处理唯一性约束错误
+      if (error.code === 11000) {
+        const field = Object.keys(error.keyPattern)[0];
+        return res.status(400).json({
+          success: false,
+          message: `${field === 'username' ? '工号' : field === 'email' ? '邮箱' : field}已存在`
+        });
+      }
+      throw error;
+    }
 
     // 生成 token
     const token = generateToken(user._id);
