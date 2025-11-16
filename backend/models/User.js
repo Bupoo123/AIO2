@@ -7,9 +7,15 @@ const userSchema = new mongoose.Schema({
     required: [true, '用户名不能为空'],
     unique: true,
     trim: true,
-    // 工号格式 M0001-M9999，长度为5，所以最小长度改为5，最大长度也改为5
-    minlength: [5, '用户名至少5个字符'],
-    maxlength: [5, '用户名最多5个字符']
+    // 工号格式 M0001-M9999，长度为5
+    // 移除长度限制，因为现在使用工号作为用户名，工号格式已经通过 match 验证
+    validate: {
+      validator: function(v) {
+        // 如果是工号格式（M开头+4位数字），则通过
+        return /^M\d{4}$/.test(v);
+      },
+      message: '用户名必须是工号格式（M0001-M9999）'
+    }
   },
   email: {
     type: String,
