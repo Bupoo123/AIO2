@@ -14,6 +14,13 @@ const generateToken = (userId) => {
 
 // 用户注册
 router.post('/register', [
+  // 兼容旧版前端：如果只传了 username，则视为 employee_id
+  (req, res, next) => {
+    if (!req.body.employee_id && req.body.username) {
+      req.body.employee_id = req.body.username;
+    }
+    next();
+  },
   body('employee_id')
     .notEmpty().withMessage('工号不能为空')
     .matches(/^M\d{4}$/).withMessage('工号格式错误，应为 M0001-M9999'),

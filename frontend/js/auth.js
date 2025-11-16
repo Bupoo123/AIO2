@@ -72,6 +72,7 @@ async function register(employeeId, email, userType, password, confirmPassword) 
             method: 'POST',
             body: JSON.stringify({
                 employee_id: employeeId,
+                username: employeeId, // 兼容后端旧的用户名校验
                 email,
                 user_type: userType,
                 password,
