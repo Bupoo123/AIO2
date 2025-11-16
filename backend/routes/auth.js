@@ -14,13 +14,17 @@ const generateToken = (userId) => {
 
 // 用户注册
 router.post('/register', [
-  body('employee_id').matches(/^M\d{4}$/).withMessage('工号格式错误，应为 M0001-M9999'),
-  body('email').isEmail().withMessage('请输入有效的邮箱地址').custom((value) => {
-    if (!value.endsWith('@matridx.com')) {
-      throw new Error('邮箱必须是公司邮箱（@matridx.com）');
-    }
-    return true;
-  }),
+  body('employee_id')
+    .notEmpty().withMessage('工号不能为空')
+    .matches(/^M\d{4}$/).withMessage('工号格式错误，应为 M0001-M9999'),
+  body('email')
+    .isEmail().withMessage('请输入有效的邮箱地址')
+    .custom((value) => {
+      if (!value.endsWith('@matridx.com')) {
+        throw new Error('邮箱必须是公司邮箱（@matridx.com）');
+      }
+      return true;
+    }),
   body('password').isLength({ min: 6 }).withMessage('密码至少6个字符'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
