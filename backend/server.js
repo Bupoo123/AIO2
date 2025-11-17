@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
+const buildCorsOptions = require('./config/corsOptions');
 
 // 导入路由
 const authRoutes = require('./routes/auth');
@@ -20,10 +21,7 @@ const app = express();
 
 // 安全中间件
 app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
-  credentials: true
-}));
+app.use(cors(buildCorsOptions()));
 
 // 解析 JSON 请求体
 app.use(express.json());
