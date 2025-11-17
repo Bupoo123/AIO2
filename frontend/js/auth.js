@@ -1,25 +1,20 @@
-// API 基础配置
-// 开发环境使用 localhost，生产环境会自动使用相对路径或环境变量
-const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/api' 
-    : '/api';
+const API_BASE_URL =
+    window.location.hostname === 'localhost'
+        ? 'http://localhost:3000/api'
+        : '/api';
 
-// 获取 token
 function getToken() {
     return localStorage.getItem('token');
 }
 
-// 设置 token
 function setToken(token) {
     localStorage.setItem('token', token);
 }
 
-// 移除 token
 function removeToken() {
     localStorage.removeItem('token');
 }
 
-// API 请求封装
 async function apiRequest(url, options = {}) {
     const token = getToken();
     const headers = {
@@ -31,102 +26,56 @@ async function apiRequest(url, options = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    try {
-        const response = await fetch(`${API_BASE_URL}${url}`, {
-            ...options,
-            headers
-        });
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+        ...options,
+        headers
+    });
 
-        const data = await response.json();
+    const data = await response.json();
 
-        if (!response.ok) {
-            console.error('API 错误响应:', {
-                url,
-                status: response.status,
-                statusText: response.statusText,
-                data
-            });
-            throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        return data;
-    } catch (error) {
-        console.error('API 请求异常:', error);
-        throw error;
+    if (!response.ok) {
+        throw new Error(data.message || "请求失败");
     }
+
+    return data;
 }
 
-// 显示消息
-function showMessage(elementId, message, type = 'success') {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.textContent = message;
-        element.className = `message ${type}`;
-        element.style.display = 'block';
-        
-        if (type === 'success') {
-            setTimeout(() => {
-                element.style.display = 'none';
-            }, 3000);
-        }
-    }
-}
-
-// 用户注册
-async function register(employeeId, email, userType, password, confirmPassword) {
-    try {
-        const response = await apiRequest('/auth/register', {
-            method: 'POST',
-            body: JSON.stringify({
-                employee_id: employeeId,
-                username: employeeId, // 兼容后端旧的用户名校验
-                email,
-                user_type: userType,
-                password,
-                confirmPassword
-            })
-        });
-
-        if (response.success) {
-            setToken(response.data.token);
-            return response.data.user;
-        }
-    } catch (error) {
-        throw error;
-    }
-}
-
-// 用户登录
+// 登录
 async function login(username, password) {
-    try {
-        const response = await apiRequest('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({
-                username,
-                password
-            })
-        });
+    const res = await apiRequest('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ username, password })
+    });
 
-        if (response.success) {
-            setToken(response.data.token);
-            return response.data.user;
-        }
-    } catch (error) {
-        throw error;
+    if (res.success) {
+        setToken(res.data.token);
+        return res.data.user;
     }
 }
 
-// 获取当前用户信息
-async function getCurrentUser() {
-    try {
-        const response = await apiRequest('/auth/me');
-        if (response.success) {
-            return response.data.user;
-        }
-    } catch (error) {
-        removeToken();
-        throw error;
+// 注册
+async function register(employeeId, email, userType, password, confirmPassword) {
+    const res = await apiRequest('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+            employee_id: employeeId,
+            username: employeeId,
+            email,
+            user_type: userType,
+            password,
+            confirmPassword
+        })
+    });
+
+    if (res.success) {
+        setToken(res.data.token);
+        return res.data.user;
     }
+}
+
+async function getCurrentUser() {
+    const res = await apiRequest('/auth/me');
+    return res.data.user;
 }
 
 // 修改密码
@@ -180,4 +129,3 @@ async function checkAuth() {
         return false;
     }
 }
-

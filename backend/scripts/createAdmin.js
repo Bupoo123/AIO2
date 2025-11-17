@@ -1,70 +1,64 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 require('dotenv').config();
 
-async function createAdmin() {
+const usernameArg = process.argv[2] || "M0001";
+const passwordArg = process.argv[3] || "123456";
+
+if (!/^M\d{4}$/.test(usernameArg)) {
+  console.error("❌ 工号必须是 M0001-M9999 格式");
+  process.exit(1);
+}
+
+async function main() {
   try {
-    // 连接数据库（优先使用环境变量，如果没有则使用默认值）
-    const mongoURI = process.env.MONGODB_URI || 
+    const mongoURI = process.env.MONGODB_URI ||
       'mongodb+srv://AIO2admin:31493170@cluster0.gpq75zd.mongodb.net/jeyi-toolhub?retryWrites=true&w=majority';
-    
+
     await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('✅ 已连接到 MongoDB Atlas');
 
-    // 检查用户是否已存在
-    const existingUser = await User.findOne({
-      $or: [{ username: 'admin' }, { email: 'admin@jeyi.com' }]
-    });
+    let user = await User.findOne({ employee_id: usernameArg });
 
-    // 先加密密码
-    const passwordHash = await bcrypt.hash('123456', 10);
-    
-    if (existingUser) {
-      // 如果用户已存在，更新为管理员并重置密码
-      // 注意：直接设置 password_hash，绕过 pre('save') 钩子，避免二次加密
-      await User.updateOne(
-        { _id: existingUser._id },
-        { 
-          $set: { 
-            role: 'admin',
-            password_hash: passwordHash,
-            login_attempts: 0
-          },
-          $unset: { lock_until: 1 }
-        }
-      );
-      console.log('✅ 用户已存在，已更新为管理员并重置密码');
-    } else {
-      // 创建新管理员用户
-      // 直接插入，使用已加密的密码，避免 pre('save') 二次加密
-      await User.create({
-        username: 'admin',
-        email: 'admin@jeyi.com',
-        password_hash: passwordHash,
-        role: 'admin'
+    if (!user) {
+      // 创建新用户
+      user = new User({
+        username: usernameArg,
+        employee_id: usernameArg,
+        email: `${usernameArg}@jeyi.com`,
+        user_type: "非研发",
+        role: "admin",
+        password_hash: passwordArg  // 让 pre-save 自动加密
       });
-      console.log('✅ 管理员账号创建成功！');
+
+      await user.save();
+      console.log(`✅ 管理员 ${usernameArg} 创建成功`);
+
+    } else {
+      // 更新已有用户
+      user.password_hash = passwordArg;
+      user.role = "admin";
+      user.login_attempts = 0;
+      user.lock_until = null;
+
+      await user.save();
+      console.log(`🔄 用户 ${usernameArg} 已存在，密码已重置为 ${passwordArg}`);
     }
 
-    // 显示用户信息
-    const user = await User.findOne({ username: 'admin' });
-    console.log('\n📋 管理员账号信息：');
-    console.log('   用户名: admin');
-    console.log('   邮箱: admin@jeyi.com');
-    console.log('   密码: 123456');
-    console.log('   角色: admin');
-    console.log('   用户ID:', user._id);
+    console.log("\n📋 管理员账号信息：");
+    console.log("   工号:", usernameArg);
+    console.log("   用户名:", usernameArg);
+    console.log("   密码:", passwordArg);
+    console.log("   邮箱:", `${usernameArg}@jeyi.com`);
+    console.log("   角色: admin");
 
+  } catch (err) {
+    console.error("❌ 失败：", err.message);
+  } finally {
     process.exit(0);
-  } catch (error) {
-    console.error('❌ 创建管理员失败:', error.message);
-    process.exit(1);
   }
 }
 
-createAdmin();
-
+main();
